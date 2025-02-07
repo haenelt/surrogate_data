@@ -1,0 +1,11 @@
+- [ ] cythonize variogram
+- [ ] update makefile
+    - [ ] python setup.py build_ext --inplace
+    - [ ] poetry install
+- [ ] add permute
+- [ ] add fitting
+- [ ] add simulations to demonstrate the working
+- [ ] add summary statistics
+- [ ] add cython to make faster
+- [ ] deploy package
+- [ ] add badges to README
