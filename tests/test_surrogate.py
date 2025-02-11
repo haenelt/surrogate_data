@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Pytest library of surrogate_data."""
 
-import pytest
 import numpy as np
+import pytest
 
-from surrogate_data.surrogate import distance_matrix, Mask
+from surrogate_data.surrogate import Mask, distance_matrix
 
 
 @pytest.fixture
@@ -24,4 +24,5 @@ def test_coordinates(array: np.ndarray) -> None:
     mask."""
     m = Mask(array)
     roi = m.scatter
-    assert np.count_nonzero(roi) == len(m.coordinates)
+    assert np.shape(m.coordinates)[0] == np.count_nonzero(roi)
+    assert np.shape(m.coordinates)[1] == 2
