@@ -1,5 +1,9 @@
 # Surrogate Data
 
+[![Test and formatting](https://github.com/haenelt/surrogate_data/actions/workflows/test.yml/badge.svg)](https://github.com/haenelt/surrogate_data/actions/workflows/test.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3127/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 Generate null distribution with preserved autocorrelation.
 
 ## Procedure
@@ -38,7 +42,7 @@ $$
 - $z$: normally distributed random variable with zero mean and unit variance
 
 $$
-\hat{x}=|\beta_{k^*}|^{1/2}x_{k^*}^{\prime}+|\alpha_{k^*}|^{1/2}z
+\hat{x}=|\beta_{k^{*}}|^{1/2}x_{k^{*}}^{\prime}+|\alpha_{k^{*}}|^{1/2}z
 $$
 
 ### Step 5: generate null distribution

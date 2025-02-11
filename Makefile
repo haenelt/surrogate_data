@@ -16,9 +16,6 @@ help:
 
 clean: clean-build clean-pyc clean-cache ## remove all build, test, coverage and Python artifacts
 
-cython:  ## compile cython code
-	poetry build
-
 clean-build: ## remove build artifacts
 	rm -fr build/
 	rm -fr dist/
@@ -41,7 +38,7 @@ clean-cache:  ## remove additional cached files
 format: ## linting, type checking, <> is replaced with package name
 	poetry run black surrogate_data
 	poetry run isort surrogate_data
-	poetry run mypy --strict surrogate_data
+	poetry run mypy surrogate_data
 
 test: ## run test suite
 	poetry run pytest

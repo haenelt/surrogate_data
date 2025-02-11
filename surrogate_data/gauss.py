@@ -36,13 +36,13 @@ class RandomGaussianField:
     Attributes:
         n: Array size in both dimensions.
         seed: Set seed of random number generator for reproducible results. Defaults
-        to None.
+            to None.
 
     References:
     .. [1] Burt et al., Generative modeling of brain maps with spatial autocorrelation,
-    NeuroImage, 2020.
+        NeuroImage, 2020.
     .. [2] https://github.com/bsciolla/gaussian-random-fields/blob/master/
-    gaussian_random_fields.py
+        gaussian_random_fields.py
 
     """
 
@@ -131,7 +131,7 @@ class MaternRandomGaussianField(RandomGaussianField):
     Attributes:
         n: Array size in both dimensions.
         seed: Set seed of random number generator for reproducible results. Defaults
-        to None.
+            to None.
 
     """
 
