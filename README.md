@@ -42,7 +42,7 @@ $$
 - $z$: normally distributed random variable with zero mean and unit variance
 
 $$
-\hat{x}=|\beta_{k^{*}}|^{1/2}x_{k^{*}}^{\prime}+|\alpha_{k^{*}}|^{1/2}z
+\hat{x}=|\beta_{k^{*}}|^{1/2}
 $$
 
 ### Step 5: generate null distribution
