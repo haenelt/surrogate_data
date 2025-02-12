@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Compute null distribution."""
+"""Generate surrogate maps."""
 
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from scipy.spatial.distance import pdist, squareform
 
+from .config import BLEND_SIGMA
+
 __all__ = ["variogram", "distance_matrix", "permute", "Mask", "smooth"]
-
-
-# Constants
-BLEND_SIGMA = 2.0  # Standard deviation for gaussian filter of blending mask
 
 
 def _exponential_kernel(distances: np.ndarray) -> np.ndarray:
@@ -41,7 +39,9 @@ def smooth(
 ) -> np.ndarray:
     """Smoothes a 2D array be local kernel-weighted sum of array values. Different
     kernels can be selected. If a mask is provided, masked values are excluded from
-    smoothing and the boundary region is blended.
+    smoothing and the boundary region is blended. The amount of blending is adjusted
+    by the constant BLEND_SIGMA, which might be set/unset (by setting to zero) in the
+    config module.
 
     Args:
         array: 2D array of values.
@@ -76,7 +76,7 @@ def smooth(
 
     # apply mask and blend filtered array
     # the mask boundary of the unchanged pixels smoothed by blending
-    if mask is not None:
+    if mask is not None and BLEND_SIGMA != 0.0:
         edge_blend = gaussian_filter(np.float32(mask), sigma=BLEND_SIGMA)
         edge_blend = np.clip(edge_blend, 0, 1)  # ensure it is in the range [0, 1]
 

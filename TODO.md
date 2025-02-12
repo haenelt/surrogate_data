@@ -1,5 +1,8 @@
 - [x] add badges to README
 - [x] add permute
 - [x] add smoothing
+- [x] add config
+- [ ] add io
 - [ ] add fitting
-- [ ] add simulations to demonstrate working
+- [ ] demo.py or ipynb: add simulations to demonstrate working
+- [ ] __main__
