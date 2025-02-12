@@ -1,5 +1,5 @@
-- [ ] add badges to README
-- [ ] add permute
+- [x] add badges to README
+- [x] add permute
+- [x] add smoothing
 - [ ] add fitting
-- [ ] add simulations to demonstrate the working
-- [ ] add summary statistics
+- [ ] add simulations to demonstrate working

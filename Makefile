@@ -36,9 +36,9 @@ clean-cache:  ## remove additional cached files
 	rm -fr .coverage
 
 format: ## linting, type checking, <> is replaced with package name
-	poetry run black surrogate_data
-	poetry run isort surrogate_data
-	poetry run mypy surrogate_data
+	poetry run black surrogate_data tests
+	poetry run isort surrogate_data tests
+	poetry run mypy surrogate_data tests
 
 test: ## run test suite
 	poetry run pytest

@@ -2,9 +2,86 @@
 """Compute null distribution."""
 
 import numpy as np
+from scipy.ndimage import gaussian_filter
 from scipy.spatial.distance import pdist, squareform
 
-__all__ = ["variogram", "distance_matrix", "permute", "Mask"]
+__all__ = ["variogram", "distance_matrix", "permute", "Mask", "smooth"]
+
+
+# Constants
+BLEND_SIGMA = 2.0  # Standard deviation for gaussian filter of blending mask
+
+
+def _exponential_kernel(distances: np.ndarray) -> np.ndarray:
+    """Normalized exponential decay kernel."""
+    return np.exp(-distances / np.max(distances, axis=-1, keepdims=True))
+
+
+def _gaussian_kernel(distances: np.ndarray) -> np.ndarray:
+    """Normalized gaussian decay kernel."""
+    return np.exp(
+        -1.25 * np.square(distances / np.max(distances, axis=-1, keepdims=True))
+    )
+
+
+def _uniform_kernel(distances: np.ndarray) -> np.ndarray:
+    """Normalized uniform kernel."""
+    return np.ones(distances.shape) / distances.shape[-1]
+
+
+_kernel: dict = {
+    "exp": _exponential_kernel,
+    "gaussian": _gaussian_kernel,
+    "uniform": _uniform_kernel,
+}
+
+
+def smooth(
+    array: np.ndarray, k: int, mask: np.ndarray | None = None, kernel: str = "exp"
+) -> np.ndarray:
+    """Smoothes a 2D array be local kernel-weighted sum of array values. Different
+    kernels can be selected. If a mask is provided, masked values are excluded from
+    smoothing and the boundary region is blended.
+
+    Args:
+        array: 2D array of values.
+        k: Number of nearest neighbors to consider for smoothing.
+        mask: 2D binary mask used to exclude voxels from smoothing. Defaults to None.
+        kernel: Distance-depending smoothing kernel (exp, gaussian, uniform). Defaults
+            to "exp".
+
+    Returns:
+        Smoothed array.
+    """
+    if k < 2:
+        raise ValueError("Minimum k is 2!")
+
+    height, width = array.shape
+    array_flat = array.ravel()
+    distances = distance_matrix(array)
+
+    # find nearest neighbors
+    sorted_idx = np.argsort(distances, axis=1)[:, :k]  # Indices of k nearest neighbors
+    sorted_distances = np.take_along_axis(distances, sorted_idx, axis=1)  # (N, k)
+    neighbor_vals = np.take_along_axis(
+        array_flat[:, None], sorted_idx, axis=0
+    )  # (N, k)
+
+    # kernel weights
+    K = _kernel[kernel](sorted_distances)  # (N, k)
+
+    # compute weighted sum (vectorized)
+    smoothed_flat = np.sum(K * neighbor_vals, axis=1) / np.sum(K, axis=1)
+    array_smoothed = smoothed_flat.reshape(height, width)
+
+    # apply mask and blend filtered array
+    # the mask boundary of the unchanged pixels smoothed by blending
+    if mask is not None:
+        edge_blend = gaussian_filter(np.float32(mask), sigma=BLEND_SIGMA)
+        edge_blend = np.clip(edge_blend, 0, 1)  # ensure it is in the range [0, 1]
+
+        return array * edge_blend + array_smoothed * (1 - edge_blend)
+    return array_smoothed
 
 
 def variogram(array: np.ndarray, lag: float, bw: float) -> float:

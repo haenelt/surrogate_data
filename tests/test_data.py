@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from surrogate_data.gauss import RandomGaussianField
+from surrogate_data.data import RandomGaussianField
 
 
 def test_spat_freq() -> None:
