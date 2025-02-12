@@ -4,5 +4,5 @@
 - [x] add config
 - [ ] add io
 - [ ] add fitting
-- [ ] demo.py or ipynb: add simulations to demonstrate working
+- [ ] example.ipynb: add simulations to demonstrate working
 - [ ] __main__

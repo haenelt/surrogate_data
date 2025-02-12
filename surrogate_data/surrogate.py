@@ -5,8 +5,6 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 from scipy.spatial.distance import pdist, squareform
 
-from .config import BLEND_SIGMA
-
 __all__ = ["variogram", "distance_matrix", "permute", "Mask", "smooth"]
 
 
@@ -35,7 +33,11 @@ _kernel: dict = {
 
 
 def smooth(
-    array: np.ndarray, k: int, mask: np.ndarray | None = None, kernel: str = "exp"
+    array: np.ndarray,
+    k: int,
+    mask: np.ndarray | None = None,
+    kernel: str = "exp",
+    blend_sigma: float = 2.0,
 ) -> np.ndarray:
     """Smoothes a 2D array be local kernel-weighted sum of array values. Different
     kernels can be selected. If a mask is provided, masked values are excluded from
@@ -49,6 +51,8 @@ def smooth(
         mask: 2D binary mask used to exclude voxels from smoothing. Defaults to None.
         kernel: Distance-depending smoothing kernel (exp, gaussian, uniform). Defaults
             to "exp".
+        blend_sigma: Filter size for smoothing the mask boundary for edge blending. No
+            blending is performed if set to zero.
 
     Returns:
         Smoothed array.
@@ -76,8 +80,8 @@ def smooth(
 
     # apply mask and blend filtered array
     # the mask boundary of the unchanged pixels smoothed by blending
-    if mask is not None and BLEND_SIGMA != 0.0:
-        edge_blend = gaussian_filter(np.float32(mask), sigma=BLEND_SIGMA)
+    if mask is not None and blend_sigma != 0.0:
+        edge_blend = gaussian_filter(np.float32(mask), sigma=blend_sigma)
         edge_blend = np.clip(edge_blend, 0, 1)  # ensure it is in the range [0, 1]
 
         return array * edge_blend + array_smoothed * (1 - edge_blend)
