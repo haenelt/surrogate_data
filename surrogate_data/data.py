@@ -3,11 +3,12 @@
 
 from pathlib import Path
 
+import matplotlib.image as mpimg
 import numpy as np
 from PIL import Image
 from scipy.special import gamma
 
-__all__ = ["RandomGaussianField", "MaternRandomGaussianField"]
+__all__ = ["RandomGaussianField", "MaternRandomGaussianField", "load_image"]
 
 
 class RandomGaussianField:
@@ -167,3 +168,11 @@ class MaternRandomGaussianField(RandomGaussianField):
         amplitude = np.array(a / b * c)
         amplitude[0, 0] = 0
         return amplitude
+
+
+def load_image(file_in: str) -> np.ndarray:
+    """Load 2D array from an image file saved on disk."""
+    image = mpimg.imread(file_in)
+    if image.ndim == 3:
+        image = np.mean(image, axis=2)
+    return image.astype(np.float64)

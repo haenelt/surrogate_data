@@ -1,8 +1,0 @@
-- [x] add badges to README
-- [x] add permute
-- [x] add smoothing
-- [x] add config
-- [ ] add io
-- [ ] add fitting
-- [ ] example.ipynb: add simulations to demonstrate working
-- [ ] __main__

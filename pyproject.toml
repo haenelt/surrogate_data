@@ -16,6 +16,8 @@ pillow = "^11.0.0"
 matplotlib = "^3.9.2"
 cython = "^3.0.11"
 setuptools = "^75.5.0"
+joblib = "^1.4.2"
+tqdm = "^4.67.1"
 
 
 [tool.poetry.group.dev.dependencies]

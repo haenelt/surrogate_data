@@ -1,88 +1,124 @@
-# Surrogate Data
+# Generate null distribution with preserved autocorrelation.
 
 [![Test and formatting](https://github.com/haenelt/surrogate_data/actions/workflows/test.yml/badge.svg)](https://github.com/haenelt/surrogate_data/actions/workflows/test.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3127/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Generate null distribution with preserved autocorrelation.
+Given a 2D target image, the package generates random surrogate maps while preserving
+spatial autocorrelation. The method closely follows [[1]](#1) and [[2]](#2).
 
-## Procedure
+In brief, surrogate maps with preserved autocorrelation are created by first random
+permutation of the target image followed by spatial smoothing. The best smoothing kernel
+is found by comparing the spatial variograms of target and generated maps, see
+[Theory](#theory) for more information.
 
-- let $x\in\mathbb R^2$
+Random maps with preserved spatial autocorrelation are valuable for generating null
+models in non-parametric tests. While null models that maintain the original data
+distribution can be produced through spatial permutation of the input map, the presence
+of spatial autocorrelation violates the assumption of exchangeability. This violation
+can lead to inflated *p*-values and increased family-wise error rates [[3]](#3). To
+address this issue, this package generates random spatial maps that preserve the
+autocorrelation structure. However, it is important to note that preserving
+autocorrelation alters the data distribution of the generated maps, unlike
+distribution-preserving random maps obtained solely through permutation of the input
+data.
 
-### Step 1: random permutation
+## Installation
+The package can be installed via `pip`:
 
-- generate $x_0^{\prime}$ (random permutation of $x$)
+```
+pip install git+https://github.com/haenelt/surrogate_data
+```
 
-### Step 2: smoothing of permuted map
+## Usage
+The package is accessible from the command line:
 
-- perform a local kernel-weighted sum of values in $x_0^{\prime}$ to construct a smoothed map $x_k^{\prime}$
-- single elements $x_i$ are computed by
+```
+python -m surrogate_data --in <image file> --out <output file (*.npy)> --n <number of maps>
+```
+
+A small demonstration can also be found in `example.ipynb`.
+
+## Theory
+### Generation of surrogate maps
+Let $x\in\mathbb R^2$ be a two-dimensional input array of real values. The array is
+thought to be spatially structured, i.e. non-random, that can be described by its
+spatial autocorrelation.
+
+#### Step 1: random permutation
+First, $x_0^{\prime}$ is created by random permutation of $x$.
+
+#### Step 2: smoothing of permuted map
+The permuted map is then smoothed by applying a kernel smoother to construct
+$x_k^{\prime}$. Single elements $x_i$ are computed by
 
 $$
 x_{k,i}=\frac{\sum_{j=1}^{k}K(d_{ij})x_{0,j}^{\prime}}{\sum_{j=1}^{k}K(d_{ij})}
 $$
 
-- $k$: number of nearest-neighboring regions used to perform the smoothing
-- $K$: distance-dependent smoothing kernel (Burt et al., 2020) uses an exponentially decaying smoothing (truncated) kernel)
-- $d_{ij}$: distance separating region $i$ and $j$
-- $k$ is chosen from a set of pre-defined values
+with the distance-dependenent smoothing kernel $K$, number of nearest-neighboring
+elements $k$, and distance $d_{ij}$ between elements $i$ and $j$. By default, a Gaussian
+smoothing kernel is used.
 
-### Step 3: rescale permuted map
+#### Step 3: rescale permuted map
+The spatial autocorrelation of $x_k^\prime$ is then compared to the autocorrelation of
+the target map $x$ by comparing the [variograms](#computation-of-smoothed-variogram)
+$\gamma(x)$ to $\gamma(x_k^\prime)$ by linear regression
 
-- rescale $x_k^{\prime}$ such that its spatial autocorrelation approximately matches the spatial autocorrelation in the target map
-- this is achieved by maximizing the fit between $\gamma(x)$ and $\gamma(x_k^{\prime})$ by linear regression
-- for each $k$ (sweep through $k$'s)
-  - $\gamma(x)=\beta\gamma(x_k^{\prime})+\alpha+\epsilon$
-  - compute sum of squared errors (SSE)
-- select $k$ with minimum SSE denoted as $k^\ast$
+$$
+\gamma(x)=\beta\gamma(x_k^{\prime})+\alpha+\epsilon
+$$
 
-### Step 4: construct surrogate map
+A sweep through a pre-defined list of $k$-values is performed and the $k$ with minimum
+sum of squared errors (SSE) is selected denoted as $k^\ast$.
 
-- $z$: normally distributed random variable with zero mean and unit variance
+#### Step 4: construct surrogate map
+The final surrogate map $\hat{x}$ is then computed by rescaling the smoothed map
 
 $$
 \hat{x}=|\beta_{k^\ast}|^{1/2} x_{k^\ast}^{\prime}+|\alpha_{k^\ast}|^{1/2}z
 $$
 
-### Step 5: generate null distribution
+with the normally distributed random variable with zero mean and unit variance $z$.
 
-- generate null distirbution by repeating step 1 and step 2 multiple times
+#### Step 5: generate null distribution
+Now, a null distribution can be generated by repeating steps 1, 2 and 4 multiple times.
 
-## Variogram $\gamma$
-
-- a variogram is a summary measure of the autocorrelation in spatial data
-- measure of pairwise variation as a function of distance
-- typically computed within finite width distance intervals
+### Computation of variogram
+A variogram $\gamma$ is a summary measure of the autocorrelation in spatial data. In
+particular, it is a measure of pairwise variation as a function of distance. Typically,
+$\gamma$ is computed within finite width distance intervals
 
 $$
 \gamma(h\pm\delta)=\frac{1}{2N(h\pm\delta)}\sum_{i=1}^{N(h\pm\delta)}\sum_{i\neq j}^{N(h\pm\delta)}(x_i-x_j)^2
 $$
 
-- $h$: length scale
-- $2\delta$: width around $h$
-- $N(h\pm\delta)$: number of sample pairs separated by a distance $d_{ij}$, which lie in the interval $h-\delta\leq d_{ij}\leq h+\delta$
+with length scale $h$ (lag) and width around $2\delta$. $N(h\pm\delta)$ is the number of
+sample pairs separated by a distance $d_{ij}$, which lie in the interval
+$h-\delta\leq d_{ij}\leq h+\delta$. The full variogram is computed by evaluating
+$\gamma$ for different $h$.
 
-## Smoothed version of $\gamma$
-
-- following Villadomat et al., 2014
-- reduce noise in $\gamma$ by smoothing
+### Computation of smoothed variogram
+Following [[1]](#1), a smoothed version of $\gamma$ can be computed to reduce noise
 
 $$
 \gamma(h)=\frac{\sum_{i=1}^{N}\sum_{j=i+1}^{N}w_{ij}v_{ij}}{\sum_{i=1}^{N}\sum_{j=i+1}^{N}w_{ij}}
 $$
 
-- $v_{ij}=\frac12(x_i-x_j)^2$
-- $w_{ij}=\exp(-(2.68s)^2/(2b)^2)$
-- $w_{ij}$: Gaussian kernel which falls off smoothly
-- $s=|h-d_{ij}|$
-- $b$: bandwidth
-- $b$ controls the smoothness
-- constants are chosen in the kernel such that the quartiles of the kernel are at $\pm0.25b$
-- spatial autocorrelation is primarily a local effect:
-  - only consider $\{d_{ij}\}$ in the bottom 25th percentile of the distribution
-- evaluate $\gamma(h)$ at 25 uniformly spaced distance intervals found in $\{d_{ij}\}$
-  - $\{h_n=h_0+2\delta n;\,n=0,1,\dots,24\}$
-  - $h_0=\min(\{d_{ij}\})$
-  - $h_{24}=\text{25th percentile of values in }\{d_{ij}\}$
-- $b$ for dense variograms was chosen to be three times the distance interval spacing, i.e., $b=3\Delta h=6\delta$
+with $v_{ij}=\frac12(x_i-x_j)^2$ and smoothing kernel $w_{ij}$. Using a smoothing kernel
+is valid since spatial autocorrelation is primarily a local effect. A Gaussian kernel
+$w_{ij}=\exp(-(2.68s)^2/(2b)^2)$ is taken with distance $s=|h-d_{ij}|$ and bandwidth $b$.
+
+## References
+<a id="1">[1]</a> Viladomat et al., Assessing the significance of global and local
+correlations under spatial autocorrelation: a nonparametric approach, *Biometrics* 2014.
+
+<a id="1">[1]</a> Burt et al., Generative modeling of brain maps with spatial
+autocorrelation, *Neuroimage* 2020.
+
+<a id="3">[3]</a> Markello and Misic, Comparing spatial null models for brain maps,
+ *Neuroimage* 2021.
+
+## Contact
+If you have questions, problems or suggestions regarding the *surrogate_data* package,
+please feel free to contact [me](mailto:daniel.haenelt@gmail.com).
